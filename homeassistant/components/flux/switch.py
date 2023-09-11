@@ -267,6 +267,34 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
+        configured_duration = int(stop_time.timestamp() - start_time.timestamp())
+        _LOGGER.debug("Lights: configured_duration = %s", configured_duration)
+
+
+        duration_to_now = int(now.timestamp() - start_time.timestamp())
+        _LOGGER.debug("AAA Lights: duration_to_now = %s", duration_to_now)
+
+#        mhbrightness = 256 * (duration_to_now / configured_duration)
+        #mhbrightness = int(256 - (256 * (duration_to_now / configured_duration)))
+        mhbrightness = int(256 - (256 * (duration_to_now / configured_duration)))
+        # If it's between midnight and start_time, then use minimun brightness
+        if duration_to_now < 0:
+            mhbrightness = 5
+        if mhbrightness < 5:
+            mhbrightness = 5
+        if mhbrightness > 256:
+            mhbrightness = 256
+        _LOGGER.debug("BBB Lights: mhduration = %s", mhbrightness)
+
+       # if 0 < duration_to_now < configured_duration:
+       #     mhduration = 55
+       # else:
+       #     mhduration = 88
+
+
+       # _LOGGER.debug("Lights: mhduration = %s", mhduration)
+
+
         if stop_time <= start_time:
             # stop_time does not happen in the same day as start_time
             if start_time < now:
@@ -314,6 +342,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         rgb = color_temperature_to_rgb(temp)
         x_val, y_val, b_val = color_RGB_to_xy_brightness(*rgb)
         brightness = self._brightness if self._brightness else b_val
+        brightness = mhbrightness
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:
@@ -322,7 +351,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             )
             _LOGGER.debug(
                 (
-                    "Lights updated to x:%s y:%s brightness:%s, %s%% "
+                    "XXX Lights updated to x:%s y:%s brightness:%s, %s%% "
                     "of %s cycle complete at %s"
                 ),
                 x_val,
@@ -335,7 +364,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
             _LOGGER.debug(
-                "Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
+                "YYY Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
                 rgb,
                 round(percentage_complete * 100),
                 time_state,
@@ -349,7 +378,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
             )
             _LOGGER.debug(
                 (
-                    "Lights updated to mired:%s brightness:%s, %s%% "
+                    "ZZZ Lights updated to mired:%s brightness:%s, %s%% "
                     "of %s cycle complete at %s"
                 ),
                 mired,
